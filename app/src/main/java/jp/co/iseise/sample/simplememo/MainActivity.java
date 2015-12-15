@@ -1,5 +1,6 @@
 package jp.co.iseise.sample.simplememo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -8,10 +9,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
@@ -41,12 +40,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 	 * メモデータ読み込み
 	 */
 	private void readMemos() {
-		for (int i = 0; i < 20; i++) {
-			Memo memo = new Memo();
-			memo.setMemo("めも" + (i + 1));
-			memo.setUpdated(new Date().getTime());
-			listMemo.add(memo);
-		}
+		DbAdapter dbAdapter = new DbAdapter(this);
+		dbAdapter.open();
+		List<Memo> list = dbAdapter.selectAllMemos();
+		listMemo.clear();
+		listMemo.addAll(list);
+		dbAdapter.close();
 		memoListAdapter.notifyDataSetChanged();
 	}
 
@@ -68,7 +67,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 		if (id == R.id.action_settings) {
 			return true;
 		} else if (id == R.id.action_new_memo) {
-			Toast.makeText(this, "新規メモ", Toast.LENGTH_LONG).show();
+			Intent intent = new Intent(this, EditActivity.class);
+			intent.putExtra(EditActivity.MODE, EditActivity.MODE_NEW);
+			startActivity(intent);
 			return true;
 		}
 
@@ -81,6 +82,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		Memo memo = listMemo.get(position);
-		Toast.makeText(this, "行クリック:" + memo.getMemo(), Toast.LENGTH_LONG).show();
+		Intent intent = new Intent(this, EditActivity.class);
+		intent.putExtra(EditActivity.MODE, EditActivity.MODE_UPDATE);
+		intent.putExtra(EditActivity.MEMO_ID, memo.getId());
+		startActivity(intent);
 	}
 }
