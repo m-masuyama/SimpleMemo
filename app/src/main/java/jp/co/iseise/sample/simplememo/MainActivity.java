@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,10 +33,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 		// メモリストアダプター作成
 		memoListAdapter = new MemoListAdapter(this, R.layout.row_memo, listMemo);
 		listView.setAdapter(memoListAdapter);
+		// コンテキストメニュー登録
+		registerForContextMenu(listView);
+	}
+
+	/**
+	 * onResume
+	 */
+	@Override
+	protected void onResume() {
+		super.onResume();
 		// メモデータ読み込み
 		readMemos();
 	}
-
 	/**
 	 * メモデータ読み込み
 	 */
@@ -74,6 +84,42 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+	/**
+	 * コンテキストメニュー（長押しメニュー）作成
+	 */
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+		if (v == listView) {
+			getMenuInflater().inflate(R.menu.main_context, menu);
+		}
+	}
+
+	/**
+	 * コンテキストメニュー（長押しメニュー）選択
+	 */
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		if (id == R.id.action_delete) {
+			final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+			Memo memo = listMemo.get(info.position);
+			deleteMemo(memo);
+			return true;
+		}
+		return super.onContextItemSelected(item);
+	}
+
+	/**
+	 * メモ削除
+	 */
+	private void deleteMemo(Memo memo) {
+		DbAdapter dbAdapter = new DbAdapter(this);
+		dbAdapter.open();
+		dbAdapter.deleteMemo(memo.getId());
+		dbAdapter.close();
+
+		readMemos();
 	}
 
 	/**
